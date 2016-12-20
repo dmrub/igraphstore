@@ -5,6 +5,7 @@
  */
 package de.dfki.resc28.igraphstore.jena;
 
+import de.dfki.resc28.igraphstore.util.ProxyConfigurator;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.rdf.model.Model;
 
@@ -18,12 +19,17 @@ import de.dfki.resc28.igraphstore.IGraphStore;
  * An RDF-Dataset is a collection of named graphs and a background graph 
  * (also called the default or unnamed graph). 
  */
-public class FusekiGraphStore implements IGraphStore 
+public class FusekiGraphStore implements IGraphStore
 {
+
+        static {
+            ProxyConfigurator.initHttpClient();
+        }
+
 	//================================================================================
 	// Constructors
 	//================================================================================
-	
+
 	public FusekiGraphStore(final String dataServerURI, final String sparqlServerURI) 
 	{
 		fDataServerURI = dataServerURI;
