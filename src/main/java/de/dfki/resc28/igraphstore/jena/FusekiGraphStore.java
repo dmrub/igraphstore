@@ -15,137 +15,172 @@ import de.dfki.resc28.igraphstore.IGraphStore;
  * @author resc01
  *
  * The FusekiGraphStore maintains an RDF-Dataset.
- * 
- * An RDF-Dataset is a collection of named graphs and a background graph 
- * (also called the default or unnamed graph). 
+ *
+ * An RDF-Dataset is a collection of named graphs and a background graph (also
+ * called the default or unnamed graph).
  */
-public class FusekiGraphStore implements IGraphStore
-{
+public class FusekiGraphStore implements IGraphStore {
 
-        static {
-            ProxyConfigurator.initHttpClient();
+    static {
+        ProxyConfigurator.initHttpClient();
+    }
+
+    //================================================================================
+    // Constructors
+    //================================================================================
+    public FusekiGraphStore(final String dataServerURI, final String sparqlServerURI) {
+        fDataServerURI = dataServerURI;
+        fSparqlServerURI = sparqlServerURI;
+    }
+
+    //================================================================================
+    // CRUD-related methods for the default graph
+    //================================================================================
+    /**
+     * Gets the default graph by name as a Jena Model from the RDF-Dataset.
+     * @return
+     */
+    @Override
+    public Model getDefaultGraph() {
+        try {
+            return DatasetAccessorFactory.createHTTP(fDataServerURI).getModel();
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not get default graph at URI: " + fDataServerURI, ex);
         }
+    }
 
-	//================================================================================
-	// Constructors
-	//================================================================================
+    /**
+     * Replaces the default graph by the given model.
+     * @param model
+     */
+    @Override
+    public void replaceDefaultGraph(final Model model) {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).putModel(model);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not replace default graph at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	public FusekiGraphStore(final String dataServerURI, final String sparqlServerURI) 
-	{
-		fDataServerURI = dataServerURI;
-		fSparqlServerURI = sparqlServerURI;
-	}
+    /**
+     * Adds the statements of the given model to the default graph in the
+     * RDF-Dataset.
+     * @param model
+     */
+    @Override
+    public void addToDefaultGraph(Model model) {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).add(model);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not add model to default graph at URI: " + fDataServerURI, ex);
+        }
+    }
 
+    /**
+     * Clears the default graph
+     */
+    @Override
+    public void clearDefaultGraph() {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).deleteDefault();
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not clear default graph at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	//================================================================================
-	// CRUD-related methods for the default graph 
-	//================================================================================
-	
-	/**
-	 * Gets the default graph by name as a Jena Model from the RDF-Dataset.
-	 */
-	@Override
-	public Model getDefaultGraph() 
-	{
-		return DatasetAccessorFactory.createHTTP(fDataServerURI).getModel();
-	}
+    //================================================================================
+    // CRUD-related methods for named graphs
+    //================================================================================
+    /**
+     * Checks if RDF-Dataset contains graph with given name.
+     * @param graphURI
+     */
+    @Override
+    public boolean containsNamedGraph(final String graphURI) {
+        try {
+            return DatasetAccessorFactory.createHTTP(fDataServerURI).containsModel(graphURI);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not check if named graph " + graphURI + " contained at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	/**
-	 * Replaces the default graph by the given model.
-	 */
-	@Override
-	public void replaceDefaultGraph(final Model model) 
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).putModel(model);
-	}
+    /**
+     * Gets a graph by name as a Jena Model from the RDF-Dataset. Defaults to
+     * background graph as a Jena Model.
+     * @param graphURI
+     * @return
+     */
+    @Override
+    public Model getNamedGraph(final String graphURI) {
+        try {
+            return DatasetAccessorFactory.createHTTP(fDataServerURI).getModel(graphURI);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not get named graph " + graphURI + " at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	/**
-	 * Adds the statements of the given model to the default graph in the RDF-Dataset.
-	 */
-	@Override
-	public void addToDefaultGraph(Model model) 
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).add(model);
-	}
-	
-	/**
-	 * Clears the default graph 
-	 */
-	@Override
-	public void clearDefaultGraph()
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).deleteDefault();
-	}
+    /**
+     * Deletes a graph by name from the RDF-dataset.
+     * @param graphURI
+     */
+    @Override
+    public void deleteNamedGraph(final String graphURI) {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).deleteModel(graphURI);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not delete default graph at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	//================================================================================
-	// CRUD-related methods for named graphs 
-	//================================================================================
+    /**
+     * Replaces a named graph in the RDF-Dataset by the given model.
+     * @param graphURI
+     * @param model
+     */
+    @Override
+    public void replaceNamedGraph(final String graphURI, final Model model) {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).putModel(graphURI, model);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not replace named graph " + graphURI + " at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	/**
-	 * Checks if RDF-Dataset contains graph with given name.
-	 */
-	@Override
-	public boolean containsNamedGraph(final String graphURI) 
-	{
-		return DatasetAccessorFactory.createHTTP(fDataServerURI).containsModel(graphURI);
-	}
+    /**
+     * Adds the statements of the given model to the named graph in the
+     * RDF-Dataset.
+     * @param graphURI
+     * @param model
+     */
+    @Override
+    public void addToNamedGraph(String graphURI, Model model) {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).add(graphURI, model);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not add model to named graph " + graphURI + " at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	/**
-	 * Gets a graph by name as a Jena Model from the RDF-Dataset.
-	 * Defaults to background graph as a Jena Model.
-	 */
-	@Override
-	public Model getNamedGraph(final String graphURI) 
-	{
-		return DatasetAccessorFactory.createHTTP(fDataServerURI).getModel(graphURI);
-	}
+    /**
+     * Creates a graph in the RDF-Dataset by name with the given model.
+     * @param graphURI
+     * @param model
+     */
+    @Override
+    public void createNamedGraph(final String graphURI, final Model model) {
+        try {
+            DatasetAccessorFactory.createHTTP(fDataServerURI).putModel(graphURI, model);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not create named graph " + graphURI + " at URI: " + fDataServerURI, ex);
+        }
+    }
 
-	/**
-	 * Deletes a graph by name from the RDF-dataset.
-	 */
-	@Override
-	public void deleteNamedGraph(final String graphURI) 
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).deleteModel(graphURI);
-	}
-
-	/**
-	 * Replaces a named graph in the RDF-Dataset by the given model.
-	 */
-	@Override
-	public void replaceNamedGraph(final String graphURI, final Model model) 
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).putModel(graphURI, model);
-	}
-	
-	/**
-	 * Adds the statements of the given model to the named graph in the RDF-Dataset.
-	 */
-	@Override
-	public void addToNamedGraph(String graphURI, Model model) 
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).add(graphURI, model);
-	}
-
-	/**
-	 * Creates a graph in the RDF-Dataset by name with the given model.
-	 */
-	@Override
-	public void createNamedGraph(final String graphURI, final  Model model) 
-	{
-		DatasetAccessorFactory.createHTTP(fDataServerURI).putModel(graphURI, model);
-	}
-
-
-	//================================================================================
-	// Query-related Methods
-	//================================================================================
-
-
-	//================================================================================
-	// Member variables
-	//================================================================================
-	
-	private String fDataServerURI;
-	private String fSparqlServerURI;
+    //================================================================================
+    // Query-related Methods
+    //================================================================================
+    //================================================================================
+    // Member variables
+    //================================================================================
+    private final String fDataServerURI;
+    private final String fSparqlServerURI;
 }
